@@ -8,7 +8,8 @@ from sqlalchemy.orm import relationship, backref
 # 参数说明： 数据库类型 + 驱动://用户名:密码@主机:端口号/数据库名字?charset=编码格式
 # mysql 自带驱动，密码为root用户登录密码，没有这不用，端口号可省略
 
-engine = create_engine('mysql://root:123456@localhost/study?charset=utf8')
+#engine = create_engine('mysql://root:123456@localhost/study?charset=utf8')
+engine = create_engine('mysql://root@localhost/study?charset=utf8')
 
 # 创建映射类需要继承声明基累
 # 声名基类时传入引擎
@@ -29,20 +30,20 @@ class User(Base):		# 继承声明基类
 
 # 建第二个映射类 Course，它对应的数据表 course 存放课程数据。一个课程作者可以创建多个课程，
 #一个课程对应唯一的课程作者，这种关系被称为一对多或者多对一关系，这是最常用的数据表关系类型：
-def Course(Base):
+class Course(Base):
 	__tablename__ = 'course'
 	id = Column(Integer, primary_key=True)
 	name = Column(String(64))
 	# ForeignKey 设置外键关联，第一个参数为字符串，user 为数据表名，id 为字段名
     	# 第二个参数 ondelete, 设置删除 User 实例后对关联的 Course 实例的处理规则
     	# 'CASCADE' 表示级联删除，删除用户实例后，对应的课程实例也会被连带删除
-	user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE')) 
+	user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
 	# relationship 设置查询接口，以便后期进行数据库查询操作
     	# 第一个参数为位置参数，参数值为外键关联的映射类名，数据类型为字符串
     	# 第二个参数 backref 设置反向查询接口
     	# backref 的第一个参数 'course' 为查询属性，User 实例使用该属性可以获得相关课程实例的列表
     	# backref 的第二个参数 cascade 如此设置即可实现 Python 语句删除用户数据时级联删除课程数据
-	user = relationship('User', 
+	user = relationship('User',
 		backref=backref('course', cascade='all, delete-orphan'))
 
 	def __repr__(self):
