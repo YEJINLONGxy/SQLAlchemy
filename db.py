@@ -2,6 +2,8 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 #from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
+# 引入 Table 类
+from sqlalchemy import Table
 
 
 # Column 定义字段，Integer、String 分别为整数和字符串数据类型
@@ -48,6 +50,41 @@ class Course(Base):
 
 	def __repr__(self):
         	return '<Course: {}>'.format(self.name)
+
+class Lab(Base):
+	__tablename__ = 'lab'
+	# 设置主键为外键，关联 course 表的 id 字段
+	# 注意参数顺序，先定义外键，再定义主键
+	id = Column(Integer, ForeignKey('course.id'), primary_key=True)
+	name = Column(String(128))
+	# 设置查询接口，Lab 实例的 course 属性值为 Course 实例
+	# Course 实例的 lab 属性值默认为列表，列表中有一个 Lab 实例
+	# uselist 参数可以设置 Course 实例的 lab 属性值为 Lab 实例而非列表
+	course = relationship('Course', backref=backref('lab', uselist=False))
+
+	def __repr__(self):
+		return '<Lab: {}>'.format(self.name)
+
+# 引入 Table 类
+
+# 创建 Table 类的实例，即中间表映射类，赋值给变量 Rela
+# 该类在实例化时，接收 4 个参数：
+# 1、数据表名字 2、Base.metadata
+# 3 和 4、两个 Column（列名，数据类型，外键，主键）
+Rela = Table('rela', Base.metadata,
+        Column('tag_id', Integer, ForeignKey('tag.id'), primary_key=True),
+        Column('course_id', Integer, ForeignKey('course.id'), primary_key=True)
+)
+
+class Tag(Base):
+	__tablename__ = 'tag'
+	id = Column(Integer, primary_key=True)
+	name = Column(String(64), unique=True)
+	# 设置查询接口，secondary 指定多对多关系的中间表，注意数据类型不是字符串
+	course = relationship('Course', secondary=Rela, backref='tag')
+
+	def __repr__(self):
+		return '<Tag: {}>'.format(self.name)
 
 # 创建数据表:
 # 声明基类 Base 在创建之后并不会主动连接数据库，因为它的默认设置为惰性模式。Base 的 metadata 有个
